@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    url: jdbc:mysql://your-production-host:3306/stock
+    username: root
+    password: your-production-password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+# MyBatis配置
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: org.example.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+server:
+  port: 8080

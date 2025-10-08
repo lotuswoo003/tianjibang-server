@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.mapper.StockDataMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="StockDataResultMap" type="org.example.entity.StockData">
+        <id property="id" column="id"/>
+        <result property="stockCode" column="stock_code"/>
+        <result property="stockName" column="stock_name"/>
+        <result property="tradeDate" column="trade_date"/>
+        <result property="openPrice" column="open_price"/>
+        <result property="highPrice" column="high_price"/>
+        <result property="lowPrice" column="low_price"/>
+        <result property="closePrice" column="close_price"/>
+        <result property="volume" column="volume"/>
+        <result property="turnover" column="turnover"/>
+        <result property="floatMarketValue" column="float_market_value"/>
+        <result property="totalMarketValue" column="total_market_value"/>
+        <result property="industryLevel1" column="industry_level1"/>
+        <result property="industryLevel2" column="industry_level2"/>
+        <result property="industryLevel3" column="industry_level3"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <!-- 通用字段 -->
+    <sql id="Base_Column_List">
+        id, stock_code, stock_name, trade_date, open_price, high_price, low_price, close_price,
+        volume, turnover, float_market_value, total_market_value,
+        industry_level1, industry_level2, industry_level3, created_at, updated_at
+    </sql>
+
+    <!-- 根据股票代码查询 -->
+    <select id="findByStockCode" resultMap="StockDataResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM stock_data
+        WHERE stock_code = #{stockCode}
+    </select>
+
+    <!-- 查询所有股票数据 -->
+    <select id="findAll" resultMap="StockDataResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM stock_data
+        ORDER BY trade_date DESC
+    </select>
+
+    <!-- 根据股票代码和日期查询 -->
+    <select id="findByStockCodeAndDate" resultMap="StockDataResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM stock_data
+        WHERE stock_code = #{stockCode}
+        AND trade_date = #{tradeDate}
+    </select>
+
+    <!-- 根据日期范围查询 -->
+    <select id="findByDateRange" resultMap="StockDataResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM stock_data
+        <where>
+            <if test="stockCode != null and stockCode != ''">
+                AND stock_code = #{stockCode}
+            </if>
+            <if test="startDate != null">
+                AND trade_date &gt;= #{startDate}
+            </if>
+            <if test="endDate != null">
+                AND trade_date &lt;= #{endDate}
+            </if>
+        </where>
+        ORDER BY trade_date DESC
+    </select>
+
+    <!-- 根据行业查询 -->
+    <select id="findByIndustry" resultMap="StockDataResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM stock_data
+        WHERE industry_level1 = #{industry}
+        ORDER BY trade_date DESC
+    </select>
+
+    <!-- 插入股票数据 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO stock_data (
+        stock_code, stock_name, trade_date, open_price, high_price, low_price, close_price,
+        volume, turnover, float_market_value, total_market_value,
+        industry_level1, industry_level2, industry_level3
+        ) VALUES (
+        #{stockCode}, #{stockName}, #{tradeDate}, #{openPrice}, #{highPrice}, #{lowPrice}, #{closePrice},
+        #{volume}, #{turnover}, #{floatMarketValue}, #{totalMarketValue},
+        #{industryLevel1}, #{industryLevel2}, #{industryLevel3}
+        )
+    </insert>
+
+    <!-- 批量插入 -->
+    <insert id="batchInsert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO stock_data (
+        stock_code, stock_name, trade_date, open_price, high_price, low_price, close_price,
+        volume, turnover, float_market_value, total_market_value,
+        industry_level1, industry_level2, industry_level3
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.stockCode}, #{item.stockName}, #{item.tradeDate}, #{item.openPrice},
+            #{item.highPrice}, #{item.lowPrice}, #{item.closePrice}, #{item.volume}, #{item.turnover},
+            #{item.floatMarketValue}, #{item.totalMarketValue}, #{item.industryLevel1},
+            #{item.industryLevel2}, #{item.industryLevel3}
+            )
+        </foreach>
+    </insert>
+
+    <!-- 更新股票数据 -->
+    <update id="update">
+        UPDATE stock_data
+        <set>
+            <if test="stockName != null">stock_name = #{stockName},</if>
+            <if test="tradeDate != null">trade_date = #{tradeDate},</if>
+            <if test="openPrice != null">open_price = #{openPrice},</if>
+            <if test="highPrice != null">high_price = #{highPrice},</if>
+            <if test="lowPrice != null">low_price = #{lowPrice},</if>
+            <if test="closePrice != null">close_price = #{closePrice},</if>
+            <if test="volume != null">volume = #{volume},</if>
+            <if test="turnover != null">turnover = #{turnover},</if>
+            <if test="floatMarketValue != null">float_market_value = #{floatMarketValue},</if>
+            <if test="totalMarketValue != null">total_market_value = #{totalMarketValue},</if>
+            <if test="industryLevel1 != null">industry_level1 = #{industryLevel1},</if>
+            <if test="industryLevel2 != null">industry_level2 = #{industryLevel2},</if>
+            <if test="industryLevel3 != null">industry_level3 = #{industryLevel3},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除股票数据 -->
+    <delete id="deleteById">
+        DELETE FROM stock_data
+        WHERE id = #{id}
+    </delete>
+
+</mapper>

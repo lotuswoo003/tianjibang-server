@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.mapper.CurrentStockDataMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="CurrentStockDataResultMap" type="org.example.entity.CurrentStockData">
+        <id property="id" column="id"/>
+        <result property="stockCode" column="stock_code"/>
+        <result property="stockName" column="stock_name"/>
+        <result property="tradeDate" column="trade_date"/>
+        <result property="openPrice" column="open_price"/>
+        <result property="highPrice" column="high_price"/>
+        <result property="lowPrice" column="low_price"/>
+        <result property="closePrice" column="close_price"/>
+        <result property="volume" column="volume"/>
+        <result property="turnover" column="turnover"/>
+        <result property="floatMarketValue" column="float_market_value"/>
+        <result property="totalMarketValue" column="total_market_value"/>
+        <result property="industryLevel1" column="industry_level1"/>
+        <result property="industryLevel2" column="industry_level2"/>
+        <result property="industryLevel3" column="industry_level3"/>
+        <result property="ma5" column="ma5"/>
+        <result property="ma10" column="ma10"/>
+        <result property="ma20" column="ma20"/>
+        <result property="volumeRatio" column="volume_ratio"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <!-- 通用字段 -->
+    <sql id="Base_Column_List">
+        id, stock_code, stock_name, trade_date, open_price, high_price, low_price, close_price,
+        volume, turnover, float_market_value, total_market_value,
+        industry_level1, industry_level2, industry_level3, ma5, ma10, ma20, volume_ratio, created_at, updated_at
+    </sql>
+
+    <!-- 插入股票数据 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO current_stock_data (
+            stock_code, stock_name, trade_date, open_price, high_price, low_price, close_price,
+            volume, turnover, float_market_value, total_market_value,
+            industry_level1, industry_level2, industry_level3
+        ) VALUES (
+            #{stockCode}, #{stockName}, #{tradeDate}, #{openPrice}, #{highPrice}, #{lowPrice}, #{closePrice},
+            #{volume}, #{turnover}, #{floatMarketValue}, #{totalMarketValue},
+            #{industryLevel1}, #{industryLevel2}, #{industryLevel3}
+        )
+    </insert>
+
+    <!-- 批量插入 -->
+    <insert id="insertBatch" useGeneratedKeys="true" keyProperty="id">
+        INSERT IGNORE INTO current_stock_data (
+            stock_code, stock_name, trade_date, open_price, high_price, low_price, close_price,
+            volume, turnover, float_market_value, total_market_value,
+            industry_level1, industry_level2, industry_level3
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+                #{item.stockCode}, #{item.stockName}, #{item.tradeDate}, #{item.openPrice},
+                #{item.highPrice}, #{item.lowPrice}, #{item.closePrice}, #{item.volume}, #{item.turnover},
+                #{item.floatMarketValue}, #{item.totalMarketValue}, #{item.industryLevel1},
+                #{item.industryLevel2}, #{item.industryLevel3}
+            )
+        </foreach>
+    </insert>
+
+    <!-- 检查记录是否存在 -->
+    <select id="exists" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM current_stock_data
+        WHERE stock_code = #{stockCode}
+        AND trade_date = #{tradeDate}
+    </select>
+
+    <!-- 查询所有记录 -->
+    <select id="selectAll" resultMap="CurrentStockDataResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM current_stock_data
+        ORDER BY trade_date DESC
+    </select>
+
+    <!-- 根据股票代码查询 -->
+    <select id="selectByStockCode" resultMap="CurrentStockDataResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM current_stock_data
+        WHERE stock_code = #{stockCode}
+        ORDER BY trade_date DESC
+    </select>
+
+    <!-- 根据日期范围查询 -->
+    <select id="selectByDateRange" resultMap="CurrentStockDataResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM current_stock_data
+        WHERE trade_date BETWEEN #{startDate} AND #{endDate}
+        ORDER BY trade_date DESC
+    </select>
+
+    <!-- 删除超过1年的旧数据 -->
+    <delete id="deleteOldData">
+        DELETE FROM current_stock_data
+        WHERE trade_date &lt; #{beforeDate}
+    </delete>
+
+    <!-- 查询指定日期范围内指定股票的交易数据（按日期升序排序） -->
+    <select id="selectByStockCodeAndDateRange" resultMap="CurrentStockDataResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM current_stock_data
+        WHERE stock_code = #{stockCode}
+        AND trade_date BETWEEN #{startDate} AND #{endDate}
+        ORDER BY trade_date ASC
+    </select>
+
+    <!-- 查询所有股票代码 -->
+    <select id="selectAllStockCodes" resultType="string">
+        SELECT DISTINCT stock_code
+        FROM current_stock_data
+        ORDER BY stock_code
+    </select>
+
+    <!-- 更新技术指标 -->
+    <update id="updateTechnicalIndicators">
+        UPDATE current_stock_data
+        SET ma5 = #{ma5},
+            ma10 = #{ma10},
+            ma20 = #{ma20},
+            volume_ratio = #{volumeRatio}
+        WHERE id = #{id}
+    </update>
+
+</mapper>

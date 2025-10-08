@@ -1,0 +1,12 @@
+# Maven
+target
+
+# Git
+.git
+.gitignore
+
+# IDE/OS
+.idea
+*.iml
+.DS_Store
+
