@@ -23,6 +23,7 @@
         <result property="ma10" column="ma10"/>
         <result property="ma20" column="ma20"/>
         <result property="volumeRatio" column="volume_ratio"/>
+        <result property="turnoverRate" column="turnover_rate"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
@@ -31,7 +32,7 @@
     <sql id="Base_Column_List">
         id, stock_code, stock_name, trade_date, open_price, high_price, low_price, close_price,
         volume, turnover, float_market_value, total_market_value,
-        industry_level1, industry_level2, industry_level3, ma5, ma10, ma20, volume_ratio, created_at, updated_at
+        industry_level1, industry_level2, industry_level3, ma5, ma10, ma20, volume_ratio, turnover_rate, created_at, updated_at
     </sql>
 
     <!-- 插入股票数据 -->
@@ -122,13 +123,122 @@
     </select>
 
     <!-- 更新技术指标 -->
-    <update id="updateTechnicalIndicators">
+    <update id="updateTechnicalIndicators" parameterType="org.example.entity.CurrentStockData">
         UPDATE current_stock_data
         SET ma5 = #{ma5},
             ma10 = #{ma10},
             ma20 = #{ma20},
-            volume_ratio = #{volumeRatio}
+            volume_ratio = #{volumeRatio},
+            turnover_rate = #{turnoverRate}
         WHERE id = #{id}
     </update>
+
+    <!-- 根据股票代码查询股票名称 -->
+    <select id="findStockNameByCode" resultType="string">
+        SELECT stock_name
+        FROM current_stock_data
+        WHERE stock_code = #{stockCode}
+        AND stock_name IS NOT NULL
+        AND stock_name != ''
+        LIMIT 1
+    </select>
+
+    <!-- 查询所有不同的股票代码和名称 -->
+    <select id="findDistinctStockCodeAndName" resultType="map">
+        SELECT DISTINCT stock_code as stockCode, stock_name as stockName
+        FROM current_stock_data
+        WHERE stock_name IS NOT NULL
+        AND stock_name != ''
+        ORDER BY stock_code
+    </select>
+
+    <!-- 查询所有不同的股票代码、名称和行业信息 -->
+    <select id="findDistinctStockInfo" resultType="map">
+        SELECT DISTINCT
+            stock_code as stockCode,
+            stock_name as stockName,
+            industry_level1 as industryLevel1,
+            industry_level2 as industryLevel2,
+            industry_level3 as industryLevel3
+        FROM current_stock_data
+        WHERE stock_name IS NOT NULL
+        AND stock_name != ''
+        ORDER BY stock_code
+    </select>
+
+    <!-- 查询指定股票中未计算技术指标的记录 -->
+    <select id="selectUncalculatedByStockCode" resultMap="CurrentStockDataResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM current_stock_data
+        WHERE stock_code = #{stockCode}
+        AND (ma5 IS NULL OR ma10 IS NULL OR ma20 IS NULL OR volume_ratio IS NULL)
+        ORDER BY trade_date ASC
+    </select>
+
+    <!-- 查询某个股票最后一条已计算指标的记录 -->
+    <select id="selectLastCalculatedRecord" resultMap="CurrentStockDataResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM current_stock_data
+        WHERE stock_code = #{stockCode}
+        AND ma5 IS NOT NULL
+        AND ma10 IS NOT NULL
+        AND ma20 IS NOT NULL
+        ORDER BY trade_date DESC
+        LIMIT 1
+    </select>
+
+    <!-- 查询某个股票在指定日期之后未计算指标的记录 -->
+    <select id="selectUncalculatedAfterDate" resultMap="CurrentStockDataResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM current_stock_data
+        WHERE stock_code = #{stockCode}
+        AND trade_date > #{afterDate}
+        AND (ma5 IS NULL OR ma10 IS NULL OR ma20 IS NULL)
+        ORDER BY trade_date ASC
+    </select>
+
+    <!-- 查询指定日期的所有股票代码和名称 -->
+    <select id="findStockNamesByDate" resultType="map">
+        SELECT DISTINCT
+            stock_code as stockCode,
+            stock_name as stockName
+        FROM current_stock_data
+        WHERE trade_date = #{tradeDate}
+        AND stock_name IS NOT NULL
+        AND stock_name != ''
+        ORDER BY stock_code
+    </select>
+
+    <!-- 根据股票代码更新所有该股票的名称 -->
+    <update id="updateStockNameByCode">
+        UPDATE current_stock_data
+        SET stock_name = #{stockName},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE stock_code = #{stockCode}
+    </update>
+
+    <!-- 查询指定股票在指定日期的数据 -->
+    <select id="selectByStockCodeAndDate" resultMap="CurrentStockDataResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM current_stock_data
+        WHERE stock_code = #{stockCode}
+        AND trade_date = #{tradeDate}
+        LIMIT 1
+    </select>
+
+    <!-- 查询指定股票在指定日期之后的第N个交易日的数据 -->
+    <select id="selectByStockCodeAndDateOffset" resultMap="CurrentStockDataResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM current_stock_data
+        WHERE stock_code = #{stockCode}
+        AND trade_date > #{afterDate}
+        ORDER BY trade_date ASC
+        LIMIT #{offset}, 1
+    </select>
 
 </mapper>

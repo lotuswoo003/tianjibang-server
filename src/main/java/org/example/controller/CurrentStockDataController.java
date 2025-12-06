@@ -122,4 +122,23 @@ public class CurrentStockDataController {
             return ResponseEntity.internalServerError().body(response);
         }
     }
+
+    @PostMapping("/calculate-ma20")
+    @Operation(summary = "计算并填充所有空的MA20", description = "计算并更新所有MA20为空的记录，为每只股票计算20日移动平均线")
+    public ResponseEntity<Map<String, Object>> calculateMA20() {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            int updatedCount = technicalIndicatorService.calculateAndUpdateAllIndicators();
+            response.put("success", true);
+            response.put("message", "MA20计算完成");
+            response.put("updatedCount", updatedCount);
+            response.put("description", "已计算并填充所有空的MA20值（包括MA5、MA10等其他技术指标）");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "MA20计算失败: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
 }

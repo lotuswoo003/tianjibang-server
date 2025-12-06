@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/lynn/IdeaProject/study/stock_addition_data/**)",
+      "Read(//Users/lynn/IdeaProject/study/stock_data/**)",
+      "Bash(awk -F',' '{print $3\"\"\"\",\"\"\"\"$4\"\"\"\",\"\"\"\"$5\"\"\"\",\"\"\"\"$6\"\"\"\",\"\"\"\"$7}')"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

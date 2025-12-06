@@ -25,6 +25,7 @@ public class CurrentStockData implements Serializable {
     private BigDecimal ma10;
     private BigDecimal ma20;
     private BigDecimal volumeRatio;
+    private BigDecimal turnoverRate;
     private Date createdAt;
     private Date updatedAt;
 
@@ -183,6 +184,14 @@ public class CurrentStockData implements Serializable {
 
     public void setVolumeRatio(BigDecimal volumeRatio) {
         this.volumeRatio = volumeRatio;
+    }
+
+    public BigDecimal getTurnoverRate() {
+        return turnoverRate;
+    }
+
+    public void setTurnoverRate(BigDecimal turnoverRate) {
+        this.turnoverRate = turnoverRate;
     }
 
     public Date getCreatedAt() {

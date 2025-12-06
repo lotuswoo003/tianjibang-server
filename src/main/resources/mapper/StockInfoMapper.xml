@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.mapper.StockInfoMapper">
+
+    <resultMap id="StockInfoResultMap" type="org.example.entity.StockInfo">
+        <id property="id" column="id"/>
+        <result property="stockCode" column="stock_code"/>
+        <result property="stockName" column="stock_name"/>
+        <result property="market" column="market"/>
+        <result property="listDate" column="list_date"/>
+        <result property="industryLevel1" column="industry_level1"/>
+        <result property="industryLevel2" column="industry_level2"/>
+        <result property="industryLevel3" column="industry_level3"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findByStockCode" resultMap="StockInfoResultMap">
+        SELECT * FROM stock_info
+        WHERE stock_code = #{stockCode}
+    </select>
+
+    <select id="findByStockName" resultMap="StockInfoResultMap">
+        SELECT * FROM stock_info
+        WHERE stock_name = #{stockName}
+    </select>
+
+    <select id="findAll" resultMap="StockInfoResultMap">
+        SELECT * FROM stock_info
+        ORDER BY stock_code
+    </select>
+
+    <select id="getStockCodeNameMap" resultType="map">
+        SELECT stock_code as `key`, stock_name as `value`
+        FROM stock_info
+    </select>
+
+    <insert id="insert" parameterType="org.example.entity.StockInfo" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO stock_info (stock_code, stock_name, market, list_date, industry_level1, industry_level2, industry_level3)
+        VALUES (#{stockCode}, #{stockName}, #{market}, #{listDate}, #{industryLevel1}, #{industryLevel2}, #{industryLevel3})
+        ON DUPLICATE KEY UPDATE
+            stock_name = VALUES(stock_name),
+            market = VALUES(market),
+            list_date = VALUES(list_date),
+            industry_level1 = VALUES(industry_level1),
+            industry_level2 = VALUES(industry_level2),
+            industry_level3 = VALUES(industry_level3),
+            updated_at = CURRENT_TIMESTAMP
+    </insert>
+
+    <insert id="batchInsert">
+        INSERT INTO stock_info (stock_code, stock_name, market, list_date, industry_level1, industry_level2, industry_level3)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.stockCode}, #{item.stockName}, #{item.market}, #{item.listDate}, #{item.industryLevel1}, #{item.industryLevel2}, #{item.industryLevel3})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+            stock_name = VALUES(stock_name),
+            market = VALUES(market),
+            list_date = VALUES(list_date),
+            industry_level1 = VALUES(industry_level1),
+            industry_level2 = VALUES(industry_level2),
+            industry_level3 = VALUES(industry_level3),
+            updated_at = CURRENT_TIMESTAMP
+    </insert>
+
+    <update id="update">
+        UPDATE stock_info
+        SET stock_name = #{stockName},
+            market = #{market},
+            list_date = #{listDate},
+            industry_level1 = #{industryLevel1},
+            industry_level2 = #{industryLevel2},
+            industry_level3 = #{industryLevel3}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateStockName">
+        UPDATE stock_info
+        SET stock_name = #{stockName},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE stock_code = #{stockCode}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM stock_info WHERE id = #{id}
+    </delete>
+
+</mapper>

@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.example.mapper.SelectedStockMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="org.example.entity.SelectedStock">
+        <id column="id" property="id"/>
+        <result column="strategy_code" property="strategyCode"/>
+        <result column="stock_code" property="stockCode"/>
+        <result column="stock_name" property="stockName"/>
+        <result column="selection_date" property="selectionDate"/>
+        <result column="selection_close_price" property="selectionClosePrice"/>
+        <result column="next_day_open_price" property="nextDayOpenPrice"/>
+        <result column="remark" property="remark"/>
+        <result column="gain_1day" property="gain1day"/>
+        <result column="gain_3day" property="gain3day"/>
+        <result column="gain_7day" property="gain7day"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <!-- 插入 -->
+    <insert id="insert" parameterType="org.example.entity.SelectedStock" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO selected_stock (
+            strategy_code, stock_code, stock_name, selection_date, selection_close_price,
+            next_day_open_price, remark, gain_1day, gain_3day, gain_7day
+        ) VALUES (
+            #{strategyCode}, #{stockCode}, #{stockName}, #{selectionDate}, #{selectionClosePrice},
+            #{nextDayOpenPrice}, #{remark}, #{gain1day}, #{gain3day}, #{gain7day}
+        )
+    </insert>
+
+    <!-- 批量插入 -->
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO selected_stock (
+            strategy_code, stock_code, stock_name, selection_date, selection_close_price,
+            next_day_open_price, remark, gain_1day, gain_3day, gain_7day
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+                #{item.strategyCode}, #{item.stockCode}, #{item.stockName},
+                #{item.selectionDate}, #{item.selectionClosePrice}, #{item.nextDayOpenPrice},
+                #{item.remark}, #{item.gain1day}, #{item.gain3day}, #{item.gain7day}
+            )
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+            stock_name = VALUES(stock_name),
+            remark = VALUES(remark),
+            updated_at = CURRENT_TIMESTAMP
+    </insert>
+
+    <!-- 根据策略代码和日期查询 -->
+    <select id="findByStrategyAndDate" resultMap="BaseResultMap">
+        SELECT * FROM selected_stock
+        WHERE strategy_code = #{strategyCode}
+        AND selection_date = #{selectionDate}
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- 根据策略代码查询最新日期的记录 -->
+    <select id="findLatestByStrategy" resultMap="BaseResultMap">
+        SELECT * FROM selected_stock
+        WHERE strategy_code = #{strategyCode}
+        AND selection_date = (
+            SELECT MAX(selection_date)
+            FROM selected_stock
+            WHERE strategy_code = #{strategyCode}
+        )
+        ORDER BY stock_code
+    </select>
+
+    <!-- 根据ID更新 -->
+    <update id="updateById" parameterType="org.example.entity.SelectedStock">
+        UPDATE selected_stock
+        <set>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="selectionClosePrice != null">selection_close_price = #{selectionClosePrice},</if>
+            <if test="nextDayOpenPrice != null">next_day_open_price = #{nextDayOpenPrice},</if>
+            <if test="gain1day != null">gain_1day = #{gain1day},</if>
+            <if test="gain3day != null">gain_3day = #{gain3day},</if>
+            <if test="gain7day != null">gain_7day = #{gain7day},</if>
+            updated_at = CURRENT_TIMESTAMP
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 更新涨跌幅 -->
+    <update id="updatePerformance">
+        UPDATE selected_stock
+        SET selection_close_price = #{selectionClosePrice},
+            next_day_open_price = #{nextDayOpenPrice},
+            gain_1day = #{gain1day},
+            gain_3day = #{gain3day},
+            gain_7day = #{gain7day},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据ID查询 -->
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT * FROM selected_stock
+        WHERE id = #{id}
+    </select>
+
+    <!-- 查询所有 -->
+    <select id="findAll" resultMap="BaseResultMap">
+        SELECT * FROM selected_stock
+        ORDER BY selection_date DESC, strategy_code, stock_code
+    </select>
+
+    <!-- 根据日期范围查询 -->
+    <select id="findByDateRange" resultMap="BaseResultMap">
+        SELECT * FROM selected_stock
+        WHERE selection_date BETWEEN #{startDate} AND #{endDate}
+        ORDER BY selection_date DESC, strategy_code, stock_code
+    </select>
+
+    <!-- 删除指定策略和日期的记录 -->
+    <delete id="deleteByStrategyAndDate">
+        DELETE FROM selected_stock
+        WHERE strategy_code = #{strategyCode}
+        AND selection_date = #{selectionDate}
+    </delete>
+
+    <!-- 分页查询 -->
+    <select id="findByPage" resultMap="BaseResultMap">
+        SELECT * FROM selected_stock
+        <where>
+            <if test="strategyCode != null and strategyCode != ''">
+                AND strategy_code = #{strategyCode}
+            </if>
+            <if test="selectionDate != null">
+                AND selection_date = #{selectionDate}
+            </if>
+        </where>
+        ORDER BY selection_date DESC, strategy_code, stock_code
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <!-- 统计记录数 -->
+    <select id="countByCondition" resultType="long">
+        SELECT COUNT(*) FROM selected_stock
+        <where>
+            <if test="strategyCode != null and strategyCode != ''">
+                AND strategy_code = #{strategyCode}
+            </if>
+            <if test="selectionDate != null">
+                AND selection_date = #{selectionDate}
+            </if>
+        </where>
+    </select>
+
+</mapper>
